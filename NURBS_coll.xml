@@ -1,0 +1,170 @@
+<mujoco model="NURBS_coll">
+    <compiler assetdir="assets"/>
+
+    <asset>
+        <mesh name="complex_surface" file="complex_surface.stl"/>   
+        <mesh name="rotor_segment" file="roter_segment.STL"/>   
+        <mesh name="surface_simple" file="surface_simple.stl"/>   
+        <mesh name="surface_EXP" file="surface_EXP.stl"/>  
+        <mesh name="NURBS_raw" file="NURBS_raw.stl"/>
+        <mesh name="surf" file="surf.stl"/>
+        <mesh name="tube" file="tube.stl"/>
+        <mesh name="NURBS_decomp_00" file="NURBS_coll_00.stl"/>
+        <mesh name="NURBS_decomp_01" file="NURBS_coll_01.stl"/>
+        <mesh name="NURBS_decomp_02" file="NURBS_coll_02.stl"/>
+        <mesh name="NURBS_decomp_03" file="NURBS_coll_03.stl"/>
+        <mesh name="NURBS_decomp_04" file="NURBS_coll_04.stl"/>
+        <mesh name="NURBS_decomp_05" file="NURBS_coll_05.stl"/>
+        <mesh name="NURBS_decomp_06" file="NURBS_coll_06.stl"/>
+        <mesh name="NURBS_decomp_07" file="NURBS_coll_07.stl"/>
+        <mesh name="NURBS_decomp_08" file="NURBS_coll_08.stl"/>
+        <mesh name="NURBS_decomp_09" file="NURBS_coll_09.stl"/>
+        <mesh name="NURBS_decomp_10" file="NURBS_coll_10.stl"/>
+        <mesh name="NURBS_decomp_11" file="NURBS_coll_11.stl"/>
+        <mesh name="NURBS_decomp_12" file="NURBS_coll_12.stl"/>
+        <mesh name="NURBS_decomp_13" file="NURBS_coll_13.stl"/>
+        <mesh name="NURBS_decomp_14" file="NURBS_coll_14.stl"/>
+        <mesh name="NURBS_decomp_15" file="NURBS_coll_15.stl"/>
+        <mesh name="NURBS_decomp_16" file="NURBS_coll_16.stl"/>
+        <mesh name="NURBS_decomp_17" file="NURBS_coll_17.stl"/>
+        <mesh name="NURBS_decomp_18" file="NURBS_coll_18.stl"/>
+        <mesh name="NURBS_decomp_19" file="NURBS_coll_19.stl"/>
+        <mesh name="NURBS_decomp_20" file="NURBS_coll_20.stl"/>
+        <mesh name="NURBS_decomp_21" file="NURBS_coll_21.stl"/>
+        <mesh name="NURBS_decomp_22" file="NURBS_coll_22.stl"/>
+        <mesh name="NURBS_decomp_23" file="NURBS_coll_23.stl"/>
+        <mesh name="NURBS_decomp_24" file="NURBS_coll_24.stl"/>
+        <mesh name="NURBS_decomp_25" file="NURBS_coll_25.stl"/>
+        <mesh name="NURBS_decomp_26" file="NURBS_coll_26.stl"/>
+        <mesh name="NURBS_decomp_27" file="NURBS_coll_27.stl"/>
+        <mesh name="NURBS_decomp_28" file="NURBS_coll_28.stl"/>
+        <mesh name="NURBS_decomp_29" file="NURBS_coll_29.stl"/>
+        <mesh name="NURBS_decomp_30" file="NURBS_coll_30.stl"/>
+        <mesh name="NURBS_decomp_31" file="NURBS_coll_31.stl"/>
+        <mesh name="NURBS_decomp_32" file="NURBS_coll_32.stl"/>
+        <mesh name="NURBS_decomp_33" file="NURBS_coll_33.stl"/>
+        <mesh name="NURBS_decomp_34" file="NURBS_coll_34.stl"/>
+        <mesh name="NURBS_decomp_35" file="NURBS_coll_35.stl"/>
+        <mesh name="NURBS_decomp_36" file="NURBS_coll_36.stl"/>
+        <mesh name="NURBS_decomp_37" file="NURBS_coll_37.stl"/>
+        <mesh name="NURBS_decomp_38" file="NURBS_coll_38.stl"/>
+        <mesh name="NURBS_decomp_39" file="NURBS_coll_39.stl"/>
+        <mesh name="NURBS_decomp_40" file="NURBS_coll_40.stl"/>
+        <mesh name="NURBS_decomp_41" file="NURBS_coll_41.stl"/>
+        <mesh name="NURBS_decomp_42" file="NURBS_coll_42.stl"/>
+        <mesh name="NURBS_decomp_43" file="NURBS_coll_43.stl"/>
+        <mesh name="NURBS_decomp_44" file="NURBS_coll_44.stl"/>
+        <mesh name="NURBS_decomp_45" file="NURBS_coll_45.stl"/>
+        <mesh name="NURBS_decomp_46" file="NURBS_coll_46.stl"/>
+        <mesh name="NURBS_decomp_47" file="NURBS_coll_47.stl"/>
+        <mesh name="NURBS_decomp_48" file="NURBS_coll_48.stl"/>
+        <mesh name="NURBS_decomp_49" file="NURBS_coll_49.stl"/>
+        <mesh name="NURBS_decomp_50" file="NURBS_coll_50.stl"/>
+        <mesh name="NURBS_decomp_51" file="NURBS_coll_51.stl"/>
+        <mesh name="NURBS_decomp_52" file="NURBS_coll_52.stl"/>
+        <mesh name="NURBS_decomp_53" file="NURBS_coll_53.stl"/>
+        <mesh name="NURBS_decomp_54" file="NURBS_coll_54.stl"/>
+        <mesh name="NURBS_decomp_55" file="NURBS_coll_55.stl"/>
+        <mesh name="NURBS_decomp_56" file="NURBS_coll_56.stl"/>
+        <mesh name="NURBS_decomp_57" file="NURBS_coll_57.stl"/>
+        <mesh name="NURBS_decomp_58" file="NURBS_coll_58.stl"/>
+        <mesh name="NURBS_decomp_59" file="NURBS_coll_59.stl"/>
+        <mesh name="NURBS_decomp_60" file="NURBS_coll_60.stl"/>
+        <mesh name="NURBS_decomp_61" file="NURBS_coll_61.stl"/>
+        <mesh name="NURBS_decomp_62" file="NURBS_coll_62.stl"/>
+        <mesh name="NURBS_decomp_63" file="NURBS_coll_63.stl"/>
+    </asset>
+
+    <default>
+        <default class="NURBS">
+            <default class="visual_nurbs">
+                <geom type="mesh" contype="0" conaffinity="0" group="2"/>
+            </default>
+            <default class="collision_nurbs">
+                <geom type="mesh" group="3"/>
+            </default>
+        </default>
+    </default>
+
+    <worldbody>
+<!--        <body name="NURBS" childclass="NURBS" pos="1.5 0 0" euler="0 0 -1.5707963267">-->
+        <!-- <body name="NURBS" childclass="NURBS" pos="1.50000 0.0 2.375000" euler="0.000000 -1.570796 0.0"> -->
+        <!-- <body name="NURBS" childclass="NURBS" pos="0.0 0.0 0.0" euler="0.000000 0.0 0.0"> -->
+         <body name="NURBS" childclass="NURBS" pos="0 0 0" euler="0 0 0">
+
+        <!-- <body name="NURBS" childclass="NURBS" pos="0 0 11.0" euler="0 0 0"> -->
+
+<!--            <geom name="surface_vis" class="visual_nurbs" type="mesh" mesh="NURBS_raw"/>-->
+<!--             <geom name="surface_vis" class="visual_nurbs" type="mesh" mesh="surf"/>-->
+             <geom name="surface_vis" class="visual_nurbs" type="mesh" mesh="tube"/>
+            <!-- <geom name="surface_vis" class="visual_nurbs" type="mesh" mesh="complex_surface"/> -->
+<!--             <geom name="surface_vis" class="visual_nurbs" type="mesh" mesh="rotor_segment"/>-->
+            <!-- <geom name="surface_vis" class="visual_nurbs" type="mesh" mesh="surface_EXP"/> -->
+            <!-- <geom name="surface_coll_00" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_00"/>
+            <geom name="surface_coll_01" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_01"/>
+            <geom name="surface_coll_02" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_02"/>
+            <geom name="surface_coll_03" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_03"/>
+            <geom name="surface_coll_04" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_04"/>
+            <geom name="surface_coll_05" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_05"/>
+            <geom name="surface_coll_06" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_06"/>
+            <geom name="surface_coll_07" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_07"/>
+            <geom name="surface_coll_08" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_08"/>
+            <geom name="surface_coll_09" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_09"/>
+            <geom name="surface_coll_10" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_10"/>
+            <geom name="surface_coll_11" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_11"/>
+            <geom name="surface_coll_12" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_12"/>
+            <geom name="surface_coll_13" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_13"/>
+            <geom name="surface_coll_14" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_14"/>
+            <geom name="surface_coll_15" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_15"/>
+            <geom name="surface_coll_16" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_16"/>
+            <geom name="surface_coll_17" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_17"/>
+            <geom name="surface_coll_18" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_18"/>
+            <geom name="surface_coll_19" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_19"/>
+            <geom name="surface_coll_20" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_20"/>
+            <geom name="surface_coll_21" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_21"/>
+            <geom name="surface_coll_22" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_22"/>
+            <geom name="surface_coll_23" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_23"/>
+            <geom name="surface_coll_24" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_24"/>
+            <geom name="surface_coll_25" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_25"/>
+            <geom name="surface_coll_26" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_26"/>
+            <geom name="surface_coll_27" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_27"/>
+            <geom name="surface_coll_28" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_28"/>
+            <geom name="surface_coll_29" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_29"/>
+            <geom name="surface_coll_30" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_30"/>
+            <geom name="surface_coll_31" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_31"/>
+            <geom name="surface_coll_32" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_32"/>
+            <geom name="surface_coll_33" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_33"/>
+            <geom name="surface_coll_34" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_34"/>
+            <geom name="surface_coll_35" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_35"/>
+            <geom name="surface_coll_36" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_36"/>
+            <geom name="surface_coll_37" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_37"/>
+            <geom name="surface_coll_38" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_38"/>
+            <geom name="surface_coll_39" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_39"/>
+            <geom name="surface_coll_40" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_40"/>
+            <geom name="surface_coll_41" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_41"/>
+            <geom name="surface_coll_42" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_42"/>
+            <geom name="surface_coll_43" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_43"/>
+            <geom name="surface_coll_44" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_44"/>
+            <geom name="surface_coll_45" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_45"/>
+            <geom name="surface_coll_46" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_46"/>
+            <geom name="surface_coll_47" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_47"/>
+            <geom name="surface_coll_48" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_48"/>
+            <geom name="surface_coll_49" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_49"/>
+            <geom name="surface_coll_50" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_50"/>
+            <geom name="surface_coll_51" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_51"/>
+            <geom name="surface_coll_52" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_52"/>
+            <geom name="surface_coll_53" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_53"/>
+            <geom name="surface_coll_54" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_54"/>
+            <geom name="surface_coll_55" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_55"/>
+            <geom name="surface_coll_56" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_56"/>
+            <geom name="surface_coll_57" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_57"/>
+            <geom name="surface_coll_58" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_58"/>
+            <geom name="surface_coll_59" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_59"/>
+            <geom name="surface_coll_60" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_60"/>
+            <geom name="surface_coll_61" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_61"/>
+            <geom name="surface_coll_62" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_62"/>
+            <geom name="surface_coll_63" class="collision_nurbs" type="mesh" mesh="NURBS_decomp_63"/> -->
+        </body>
+    </worldbody>
+
+</mujoco>

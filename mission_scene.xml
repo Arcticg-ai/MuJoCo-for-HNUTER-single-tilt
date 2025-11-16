@@ -1,0 +1,44 @@
+<mujoco>
+  <compiler autolimits="true" assetdir="assets_hnu"/>
+
+  <!-- <include file="NURBS_coll.xml"/> -->
+
+  <!-- <include file="hnuter.xml"/> -->
+  <include file="hnuter_mission.xml" euler="0 0 0"/>
+
+  <!-- <statistic center="0 -0.2 0.1" extent="1.0"/> -->
+  <statistic center="0 0 1" extent="1.0"/>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .2 .3" rgb2=".2 .3 .4"/>
+    <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+  </asset>
+
+  <default>
+    <default class="car">
+      <joint damping=".03" actuatorfrcrange="-0.5 0.5"/>
+      <default class="wheel">
+        <geom type="cylinder" size=".03 .01" rgba=".5 .5 1 1"/>
+      </default>
+      <default class="decor">
+        <site type="box" rgba=".5 1 .5 1"/>
+      </default>
+    </default>
+  </default>
+
+
+  <worldbody>
+    <light name="light1" pos="0 0 10" dir="0 0 -1" diffuse="1 1 1" specular="0.7 0.7 0.7" />
+    <geom name="floor" type="plane" size="0 0 0.05" material="grid"/>
+      <!-- 新添加的两个斜面 -->
+    <body name="slope1" pos="-3 3 0.25" euler="-1.0472 0 0">  <!-- 倾斜30度 -->
+      <geom type="box" size="3 3 0.05" rgba="0.7 0.3 0.3 1" mass="10"/>
+    </body>
+    <body name="slope2" pos="3 3 0.35" euler="0.7854 0 0">   <!-- 倾斜45度 -->
+      <geom type="box" size="3 3 0.05" rgba="0.3 0.3 0.7 1" mass="10"/>
+    </body>
+
+  </worldbody>
+  
+
+</mujoco>
