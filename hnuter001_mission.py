@@ -350,6 +350,7 @@ class HnuterController:
         # 构造目标旋转矩阵（无需SVD，直接返回正交矩阵）
         return np.column_stack([x_ref, y_d, z_d])
 
+
     def compute_attitude_errors(self, state: dict, R_WB_d: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """计算姿态误差(论文公式5)"""
         R_WB = state['rotation_matrix']
@@ -469,7 +470,7 @@ class HnuterController:
         
         self.alpha0 = alpha0
         self.alpha1 = alpha1
-
+        # print(alpha0)
         self.data.ctrl[tilt_right_id] = alpha0  # 右侧倾角
         self.data.ctrl[tilt_left_id] = alpha1  # 左侧倾角
         
@@ -626,11 +627,6 @@ def update_plot(fig, plot_data, plot_lines, time_val, state, controller):
     plot_data['T12'].append(controller.T12)
     plot_data['T34'].append(controller.T34)
     plot_data['T5'].append(controller.T5)
-    
-    # 加速度数据
-    # plot_data['accel_x'].append(state['acceleration'][0])
-    # plot_data['accel_y'].append(state['acceleration'][1])
-    # plot_data['accel_z'].append(state['acceleration'][2])
 
     # 倾转角度数据
     plot_data['alpha0'].append(np.degrees(controller.alpha0))
@@ -668,15 +664,6 @@ def update_plot(fig, plot_data, plot_lines, time_val, state, controller):
     y_min = min(min(plot_data['T12']), min(plot_data['T34']), min(plot_data['T5']))
     y_max = max(max(plot_data['T12']), max(plot_data['T34']), max(plot_data['T5']))
     plot_lines['thrust']['T12'].axes.set_ylim(y_min - 2, y_max + 2)
-    
-    # 更新加速度图
-    # plot_lines['accel']['x'].set_data(plot_data['time'], plot_data['accel_x'])
-    # plot_lines['accel']['y'].set_data(plot_data['time'], plot_data['accel_y'])
-    # plot_lines['accel']['z'].set_data(plot_data['time'], plot_data['accel_z'])
-    # plot_lines['accel']['x'].axes.set_xlim(min(plot_data['time']), max(plot_data['time']))
-    # y_min = min(min(plot_data['accel_x']), min(plot_data['accel_y']), min(plot_data['accel_z']))
-    # y_max = max(max(plot_data['accel_x']), max(plot_data['accel_y']), max(plot_data['accel_z']))
-    # plot_lines['accel']['x'].axes.set_ylim(y_min - 2, y_max + 2)
     
     # =====更新倾转角度图 =====
     plot_lines['tilt']['alpha0'].set_data(plot_data['time'], plot_data['alpha0'])
@@ -749,10 +736,9 @@ def main():
         try:
             while v.is_running:
                 current_time = time.time() - start_time
-                
+                print(current_time)
 
-                target_pos, target_vel, target_yaw , target_pitch = mobius_trajectory(current_time)
-            
+                # target_pos, target_vel, target_yaw , target_pitch = mobius_trajectory(current_time)
                 # 设置目标状态
                 # controller.set_target_position(*target_pos)
                 # controller.set_target_velocity(*target_vel)
@@ -760,8 +746,19 @@ def main():
                 
                 target_position = [-3.0, 3.0, 2.25]
                 target_attitude = [-1.0472, 0.0, 0.0]  # roll, pitch, yaw
-                controller.set_target_position(0.0, 0.0, 1.25)
-                controller.set_target_attitude(0.0, 1.4, 0)
+                if current_time <= 2:
+                    controller.set_target_position(0.0, 0.0, 2.25)
+                    controller.set_target_attitude(0.0, 0.0, 0.0)
+                elif current_time > 2 and current_time <= 4:  # 改 & → and
+                    controller.set_target_position(0.0, 0.0, 2.25)
+                    controller.set_target_attitude(0.0, 1.35, 0.0)
+                elif current_time > 4 and current_time <= 10:  # 改 & → and
+                    controller.set_target_position(-3.0, 0.0, 2.25)
+                    controller.set_target_attitude(0.0, 1.2, 0.0)
+                else:
+                    controller.set_target_position(-3.0, 0.0, 2.25)
+                    controller.set_target_attitude(0.0, 1.2, 0.0)              
+
                 # 获取当前状态
                 state = controller.get_state()
                 
@@ -785,10 +782,10 @@ def main():
                     controller.print_status()
                     last_print_time = current_time
                 
-                # # 定期更新绘图
-                # if current_time - last_plot_update > plot_update_interval:
-                #     update_plot(fig, plot_data, plot_lines, current_time, state, controller)
-                #     last_plot_update = current_time
+                # 定期更新绘图
+                if current_time - last_plot_update > plot_update_interval:
+                    update_plot(fig, plot_data, plot_lines, current_time, state, controller)
+                    last_plot_update = current_time
 
                 time.sleep(0.001)
 

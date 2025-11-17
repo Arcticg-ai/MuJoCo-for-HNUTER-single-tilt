@@ -724,7 +724,7 @@ def main():
     fig, axs, plot_data, plot_lines = setup_plots()
 
     # 初始化控制器
-    controller = HnuterController("scene.xml")
+    controller = HnuterController("mission_scene.xml")
     
     pitch = 0
     yaw = 0
@@ -754,12 +754,12 @@ def main():
                 target_pos, target_vel, target_yaw , target_pitch = mobius_trajectory(current_time)
             
                 # 设置目标状态
-                controller.set_target_position(*target_pos)
-                controller.set_target_velocity(*target_vel)
-                controller.set_target_attitude(0, target_pitch, target_yaw)
+                # controller.set_target_position(*target_pos)
+                # controller.set_target_velocity(*target_vel)
+                # controller.set_target_attitude(0, target_pitch, target_yaw)
 
-                # controller.set_target_position(1, 1, pos_z)
-                # controller.set_target_attitude(0, 1, 3.14)
+                controller.set_target_position(0, 0, 1)
+                controller.set_target_attitude(0, 0, 0)
                 # 获取当前状态
                 state = controller.get_state()
                 

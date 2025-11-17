@@ -1,6 +1,6 @@
 <mujoco>
   <compiler autolimits="true" assetdir="assets_hnu"/>
-
+  <option solver="CG" tolerance="1e-6" timestep=".001"/>
   <!-- <include file="NURBS_coll.xml"/> -->
 
   <!-- <include file="hnuter.xml"/> -->
@@ -26,17 +26,14 @@
     </default>
   </default>
 
-
   <worldbody>
+    <!-- <light name="light1" pos="2 0 1" dir="1 0 1" diffuse="1 1 1" specular="0.7 0.7 0.7" /> -->
     <light name="light1" pos="0 0 10" dir="0 0 -1" diffuse="1 1 1" specular="0.7 0.7 0.7" />
     <geom name="floor" type="plane" size="0 0 0.05" material="grid"/>
-      <!-- 新添加的两个斜面 -->
-    <body name="slope1" pos="-3 3 0.25" euler="-1.0472 0 0">  <!-- 倾斜30度 -->
-      <geom type="box" size="3 3 0.05" rgba="0.7 0.3 0.3 1" mass="10"/>
-    </body>
-    <body name="slope2" pos="3 3 0.35" euler="0.7854 0 0">   <!-- 倾斜45度 -->
-      <geom type="box" size="3 3 0.05" rgba="0.3 0.3 0.7 1" mass="10"/>
-    </body>
+
+    <!-- <body name="slope1" pos="5 0 0.25" euler="0 3.8 1.57"> 
+      <geom type="box" size="5 5 0.05" rgba="0.7 0.3 0.3 1" mass="10"/>
+    </body> -->
 
   </worldbody>
   

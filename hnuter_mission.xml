@@ -1,159 +1,170 @@
 <mujoco model="hnuter">
   <!-- 编译器设置：自动计算质量分布限制，使用弧度制，资源目录 -->
-  <compiler autolimits="true" angle="radian" assetdir="assets_hnu"/>
-  
-  <!-- 物理环境参数：时间步长、重力、空气密度、粘度 -->
-  <option timestep="0.01" gravity="0 0 -9.81" density="1.204" viscosity="1.8e-5"/>
-  
-  <!-- 全局资源（材质、纹理、网格） -->
-  <asset>
-    <!-- 纹理：天空盒渐变效果 -->
-    <texture type="skybox" builtin="gradient" width="512" height="512" rgb1="0.6 0.8 1" rgb2="0.2 0.3 0.6"/>
-    
-    <!-- 材质：定义视觉和碰撞的材质特性 -->
-    <material name="visualGeo" rgba="0.8 0.6 0.4 1"/> <!-- 视觉材质：橙色 -->
-    <material name="collisionGeo" rgba="0.3 0.3 0.8 0.5"/> <!-- 碰撞材质：蓝色半透明 -->
-    
-    <!-- 网格：从STL文件加载无人机的各个部分 -->
-    <mesh name="framebody" file="T-framebody.stl"/>
-    <mesh name="framer_motor" file="T-framer_motor.stl"/>
-    <mesh name="framel_motor" file="T-framel_motor.stl"/>
-    <mesh name="framerb" file="T-framerb.stl"/>
-    <mesh name="framert" file="T-framert.stl"/>
-    <mesh name="framelb" file="T-framelb.stl"/>
-    <mesh name="framelt" file="T-framelt.stl"/>
-    <mesh name="frametail" file="T-frametail.stl"/>
-  </asset>
+    <compiler autolimits="true" angle="radian" assetdir="assets_hnu"/>
 
-  <!-- 默认参数设定（按类别分组） -->
-  <default>
-    <!-- 无人机类别的默认参数 -->
-    <default class="drone">
-      <!-- 视觉几何体默认参数：不参与碰撞 -->
-      <default class="visual">
-        <geom group="2" contype="0" conaffinity="0" material="visualGeo"/> 
-      </default>
-      <!-- 碰撞几何体默认参数：设置接触动力学 -->
-      <default class="collision">
-        <geom group="3" contype="1" conaffinity="1" material="collisionGeo"/>
-      </default>
-      <!-- 电机默认控制范围 -->
-      <site group="3"/> 
-      <motor ctrlrange="0 130"/>
+    <!-- 物理环境参数：时间步长、重力、空气密度、粘度 -->
+    <option timestep="0.01" gravity="0 0 -9.81" density="1.204" viscosity="1.8e-5"/>
+
+    <!-- 全局资源（材质、纹理、网格） -->
+    <asset>
+        <!-- 纹理：天空盒渐变效果 -->
+        <texture type="skybox" builtin="gradient" width="512" height="512" rgb1="0.6 0.8 1" rgb2="0.2 0.3 0.6"/>
+        
+        <!-- 材质：定义视觉和碰撞的材质特性 -->
+        <material name="visualGeo" rgba="0.93 0.8 0.25 1"/> <!-- 视觉材质：橙色 -->
+        <material name="collisionGeo" rgba="0.3 0.3 0.8 0.5"/> <!-- 碰撞材质：蓝色半透明 -->
+        
+        <!-- 网格：只保留螺旋桨部分的网格，其他部分改用基本几何体 -->
+        <mesh name="framerb" file="T-framerb.stl"/>
+        <mesh name="framert" file="T-framert.stl"/>
+        <mesh name="framelb" file="T-framelb.stl"/>
+        <mesh name="framelt" file="T-framelt.stl"/>
+        <mesh name="frametail" file="T-frametail.stl"/>
+    </asset>
+
+    <!-- 默认参数设定（按类别分组） -->
+    <default>
+        <!-- 无人机类别的默认参数 -->
+        <default class="drone">
+        <!-- 视觉几何体默认参数：不参与碰撞 -->
+        <default class="visual">
+            <geom group="2" contype="0" conaffinity="0" material="visualGeo"/> 
+        </default>
+        <!-- 碰撞几何体默认参数：设置接触动力学 -->
+        <default class="collision">
+            <geom group="3" contype="1" conaffinity="1" material="collisionGeo"/>
+        </default>
+        <!-- 电机默认控制范围 -->
+        <site group="3"/> 
+        <motor ctrlrange="0 130"/>
+        </default>
     </default>
-  </default>
-  
-  <!-- 世界实体（地面、无人机、光源等） -->
-  <worldbody>
-    <!-- 无人机主机身 -->
-    <body name="base_link" pos="0 0 0.3" childclass="drone">
-      <!-- 质量特性：位置、质量、对角惯性矩 -->
-      <inertial pos="0 0 0" mass="1.9" diaginertia="0.1 0.12 0.1"/>
-      <!-- 自由关节：允许6自由度运动，添加阻尼减少振荡 -->
-      <!-- <joint name="free_joint" type="free" damping="0.01"/> -->
-      <joint name="free_joint" type="free"/>
-      <!-- 传感器站点：用于放置IMU -->
-      <site name="imu" pos="0 0 0"/>
-      
-      <!-- 主机身几何体：视觉网格和简化碰撞盒 -->
-      <geom class="visual" type="mesh" mesh="framebody"/>
-      <geom class="collision" type="box" size="0.15 0.15 0.05"/>
-      
-      <!-- 右侧倾转机构 -->
-      <body name="right_tilt_assembly" pos="0.0 0.3 0.0">
-        <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
-        <!-- 倾转关节：绕Y轴旋转，设置范围及阻尼 -->
-        <joint name="tilt_right_joint" type="hinge" axis="0 -1 0" range="-3 3" damping="0.1"/>
-        <!-- 几何体：视觉网格和碰撞圆柱 -->
-        <geom class="visual" type="mesh" mesh="framer_motor"/>
-        <geom class="collision" type="cylinder" size="0.04 0.03"/>
-        <!-- 右下螺旋桨 -->
-        <body name="right_bottom_prop" pos="0.0 0.0 -0.05">
-          <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
-          <joint name="prop_rb_joint" type="hinge" axis="0 0 1" damping="0.01"/>
-          <geom class="visual" type="mesh" mesh="framerb"/>
-          <site name="thrust_rb" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
-        </body>
-        <!-- 右上螺旋桨 -->
-        <body name="right_top_prop" pos="0.0 0.0 0.05">
-          <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
-          <joint name="prop_rt_joint" type="hinge" axis="0 0 1" damping="0.01"/>
-          <geom class="visual" type="mesh" mesh="framert"/>
-          <site name="thrust_rt" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
-        </body>
-      </body>
 
-      <!-- 左侧倾转机构（结构对称） -->
-      <body name="left_tilt_assembly"  pos="0.0 -0.3 0.0">
-        <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
-        <joint name="tilt_left_joint" type="hinge" axis="0 1 0" range="-3 3" damping="0.1"/>
-        <geom class="visual" type="mesh" mesh="framel_motor"/>
-        <geom class="collision" type="cylinder" size="0.04 0.03"/>
-        <!-- 左下螺旋桨 -->
-        <body name="left_bottom_prop" pos="0.0 0.0 -0.05">
-          <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
-          <joint name="prop_lb_joint" type="hinge" axis="0 0 1" damping="0.01"/>
-          <geom class="visual" type="mesh" mesh="framelb"/>
-          <site name="thrust_lb" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
-        </body>
-        <!-- 左上螺旋桨 -->
-        <body name="left_top_prop" pos="0.0 0.0 0.05">
-          <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
-          <joint name="prop_lt_joint" type="hinge" axis="0 0 1" damping="0.01"/>
-          <geom class="visual" type="mesh" mesh="framelt"/>
-          <site name="thrust_lt" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
-        </body>
-      </body>
+    <!-- 世界实体（地面、无人机、光源等） -->
+    <worldbody>
+        <!-- 无人机主机身 -->
+        <body name="base_link" pos="0 0 0.3" childclass="drone">
+        <!-- 质量特性：位置、质量、对角惯性矩 -->
+        <inertial pos="0 0 0" mass="1.9" diaginertia="0.1 0.12 0.1"/>
+        <!-- 自由关节：允许6自由度运动 -->
+        <joint name="free_joint" type="free"/>
+        <!-- 传感器站点：用于放置IMU -->
+        <site name="imu" pos="0 0 0"/>
+        
+        <!-- 主机身几何体：改用方块表示视觉，保持碰撞盒 -->
+        <geom class="visual" type="box" size="0.15 0.1 0.05"/>
+        <geom class="collision" type="box" size="0.15 0.1 0.05"/>
+        
+            <body name="xifu" pos="0.0 0.0 0.06">
+                <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
+                <geom class="visual" type="cylinder" size="0.1 0.09" material="collisionGeo"/>
+                <geom class="collision" type="cylinder" size="0.1 0.09"/>
+            </body>
 
-      <!-- 尾部推进器 -->
-      <body name="tail_motor" pos="0.5 0.0 0.0">
-        <inertial pos="0.0 0.0 0.0" mass="0.2" diaginertia="0.01 0.01 0.01"/>
-        <!-- <joint name="tail_joint" type="hinge" axis="0 0 1" damping="0.1"/> -->
-        <geom class="visual" type="mesh" mesh="frametail"/>
-        <geom class="collision" type="cylinder" size="0.1 0.02" zaxis="0 0 1"/>
-        <site name="thrust_tail" pos="-0.0 -0.0 -0.0" zaxis="0 0 1"/>
-      </body>
-      <body name="Counterweight" pos="-0.5 0.0 0.0">
-        <inertial pos="0.0 0.0 0.0" mass="0.2" diaginertia="0.01 0.01 0.01"/>
-      </body>
-    </body>
-  </worldbody>
+            <!-- 右侧倾转机构 -->
+            <body name="right_tilt_assembly" pos="0.0 0.3 0.0">
+                <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
+                <!-- 倾转关节：绕Y轴旋转，设置范围及阻尼 -->
+                <joint name="tilt_right_joint" type="hinge" axis="0 -1 0" range="-3 3" damping="0.1"/>
+                <!-- 几何体：改用圆柱体表示视觉，保持碰撞圆柱 -->
+                <geom class="visual" type="cylinder" size="0.04 0.03"/>
+                <geom class="collision" type="cylinder" size="0.04 0.03"/>
+                <!-- 右下螺旋桨：保持网格表示 -->
+                <body name="right_bottom_prop" pos="0.0 0.0 -0.05">
+                    <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
+                    <joint name="prop_rb_joint" type="hinge" axis="0 0 1" damping="0.01"/>
+                    <geom class="visual" type="mesh" mesh="framerb"/>
+                    <site name="thrust_rb" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                </body>
+                <!-- 右上螺旋桨：保持网格表示 -->
+                <body name="right_top_prop" pos="0.0 0.0 0.05">
+                    <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
+                    <joint name="prop_rt_joint" type="hinge" axis="0 0 1" damping="0.01"/>
+                    <geom class="visual" type="mesh" mesh="framert"/>
+                    <site name="thrust_rt" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                </body>
+            </body>
 
-  <!-- 执行器系统 -->
-  <actuator>
-    <!-- 倾转机构位置控制器：设置刚度和阻尼增益 -->
-    <position name="tilt_right" joint="tilt_right_joint" kp="15" kv="3"/> 
-    <position name="tilt_left"  joint="tilt_left_joint"  kp="15" kv="3"/>
-    
-    <!-- 螺旋桨和尾部推进器：力执行器 -->
-    <motor class="drone" name="thrust_rb" site="thrust_rb" gear="0 0 1 0 0 0.006"  forcerange="0 15"/>
-    <motor class="drone" name="thrust_rt" site="thrust_rt" gear="0 0 1 0 0 0.006" forcerange="0 15"/>
-    <motor class="drone" name="thrust_lb" site="thrust_lb" gear="0 0 1 0 0 -0.006"  forcerange="0 15"/>
-    <motor class="drone" name="thrust_lt" site="thrust_lt" gear="0 0 1 0 0 -0.006" forcerange="0 15"/>
-    <motor class="drone" name="thrust_tail" site="thrust_tail" gear="0 0 1 0 0 8.1e-8" forcerange="-10 10" ctrlrange="-10 10"/>
-  </actuator>
-  
-  <!-- 传感器系统 -->
-  <sensor>
-    <!-- 基础IMU传感器 -->
-    <gyro name="body_gyro" site="imu"/> 
-    <accelerometer name="body_acc" site="imu"/>
-    <framequat name="body_quat" objtype="site" objname="imu"/>
-    <framepos name="body_pos" objtype="site" objname="imu"/>
-    <framelinvel name="body_vel" objtype="site" objname="imu"/>
-    <force name="thrust_rb_frc" site="thrust_rb"/> <!-- 螺旋桨右下推力 -->
-    <force name="thrust_rt_frc" site="thrust_rt"/> <!-- 螺旋桨右下推力 -->
-    <force name="thrust_lb_frc" site="thrust_lb"/> <!-- 螺旋桨右下推力 -->
-    <force name="thrust_lt_frc" site="thrust_lt"/> <!-- 螺旋桨右下推力 -->
-    <force name="thrust_tail_frc" site="thrust_tail"/> <!-- 螺旋桨右下推力 -->
-    <!-- 新增：角加速度传感器 -->
-    <subtreeangmom name="body_ang_mom" body="base_link"/>
-    
-    <!-- 新增：关节状态传感器 -->
-    <jointpos name="tilt_right_pos" joint="tilt_right_joint"/>
-    <jointvel name="tilt_right_vel" joint="tilt_right_joint"/>
-    <jointpos name="tilt_left_pos" joint="tilt_left_joint"/>
-    <jointvel name="tilt_left_vel" joint="tilt_left_joint"/>
-    
-  </sensor>
+            <!-- 左侧倾转机构（结构对称） -->
+            <body name="left_tilt_assembly"  pos="0.0 -0.3 0.0">
+                <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
+                <joint name="tilt_left_joint" type="hinge" axis="0 1 0" range="-3 3" damping="0.1"/>
+                <!-- 几何体：改用圆柱体表示视觉 -->
+                <geom class="visual" type="cylinder" size="0.04 0.03"/>
+                <geom class="collision" type="cylinder" size="0.04 0.03"/>
+                <!-- 左下螺旋桨：保持网格表示 -->
+                <body name="left_bottom_prop" pos="0.0 0.0 -0.05">
+                    <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
+                    <joint name="prop_lb_joint" type="hinge" axis="0 0 1" damping="0.01"/>
+                    <geom class="visual" type="mesh" mesh="framelb"/>
+                    <site name="thrust_lb" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                </body>
+                <!-- 左上螺旋桨：保持网格表示 -->
+                <body name="left_top_prop" pos="0.0 0.0 0.05">
+                    <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
+                    <joint name="prop_lt_joint" type="hinge" axis="0 0 1" damping="0.01"/>
+                    <geom class="visual" type="mesh" mesh="framelt"/>
+                    <site name="thrust_lt" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                </body>
+            </body>
+
+            <!-- 尾部推进器：改用圆柱体表示 -->
+            <body name="tail_motor" pos="0.5 0.0 0.03">
+                <inertial pos="0.0 0.0 0.0" mass="0.01" diaginertia="0.01 0.01 0.002"/>
+                <joint name="tail_joint" type="hinge" axis="0 0 1" damping="0.01"/>
+                <geom class="visual" type="mesh" mesh="frametail"/>
+                <site name="thrust_tail" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+            </body>
+
+            <body name="rear_arm_base" pos="0.1 0 0">
+                <geom class="visual" type="cylinder" fromto="0 0 0 0.4 0 0" size="0.008"/>
+                <inertial pos="-0.2 0 0" mass="0.0" diaginertia="0.002 0.002 0.002"/>
+            </body>
+
+            <body name="left_arm_base" pos="0 0.1 0">
+                <geom class="visual" type="cylinder" fromto="0 0 0 0 0.2 0" size="0.008"/>
+                <inertial pos="0 0.1 0" mass="0.19" diaginertia="0.002 0.002 0.002"/>
+            </body>
+
+            <body name="right_arm_base" pos="0 -0.1 0">
+                <geom class="visual" type="cylinder" fromto="0 0 0 0 -0.2 0" size="0.008"/>
+                <inertial pos="0 -0.1 0" mass="0.19" diaginertia="0.002 0.002 0.002"/>
+            </body>
+
+            <body name="Counterweight" pos="-0.5 0.0 0.02">
+                <inertial pos="0.0 0.0 0.0" mass="0.01" diaginertia="0.01 0.01 0.01"/>
+            </body>
+
+        </body>
+    </worldbody>
+
+    <!-- 执行器系统（保持不变） -->
+    <actuator>
+        <position name="tilt_right" joint="tilt_right_joint" kp="15" kv="3"/> 
+        <position name="tilt_left"  joint="tilt_left_joint"  kp="15" kv="3"/>
+        <motor class="drone" name="thrust_rb" site="thrust_rb" gear="0 0 1 0 0 0.006"  forcerange="0 15"/>
+        <motor class="drone" name="thrust_rt" site="thrust_rt" gear="0 0 1 0 0 -0.006" forcerange="0 15"/>
+        <motor class="drone" name="thrust_lb" site="thrust_lb" gear="0 0 1 0 0 -0.006"  forcerange="0 15"/>
+        <motor class="drone" name="thrust_lt" site="thrust_lt" gear="0 0 1 0 0 0.006" forcerange="0 15"/>
+        <motor class="drone" name="thrust_tail" site="thrust_tail" gear="0 0 1 0 0 0.08" forcerange="-10 10" ctrlrange="-10 10"/>
+    </actuator>
+
+    <!-- 传感器系统（保持不变） -->
+    <sensor>
+        <gyro name="body_gyro" site="imu"/> 
+        <accelerometer name="body_acc" site="imu"/>
+        <framequat name="body_quat" objtype="site" objname="imu"/>
+        <framepos name="body_pos" objtype="site" objname="imu"/>
+        <framelinvel name="body_vel" objtype="site" objname="imu"/>
+        <force name="thrust_rb_frc" site="thrust_rb"/>
+        <force name="thrust_rt_frc" site="thrust_rt"/>
+        <force name="thrust_lb_frc" site="thrust_lb"/>
+        <force name="thrust_lt_frc" site="thrust_lt"/>
+        <force name="thrust_tail_frc" site="thrust_tail"/>
+        <subtreeangmom name="body_ang_mom" body="base_link"/>
+        <jointpos name="tilt_right_pos" joint="tilt_right_joint"/>
+        <jointvel name="tilt_right_vel" joint="tilt_right_joint"/>
+        <jointpos name="tilt_left_pos" joint="tilt_left_joint"/>
+        <jointvel name="tilt_left_vel" joint="tilt_left_joint"/>
+    </sensor>
 </mujoco>
