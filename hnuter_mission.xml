@@ -34,9 +34,9 @@
         <default class="collision">
             <geom group="3" contype="1" conaffinity="1" material="collisionGeo"/>
         </default>
-        <!-- 电机默认控制范围 -->
-        <site group="3"/> 
-        <motor ctrlrange="0 130"/>
+            <!-- 电机默认控制范围 -->
+            <site group="3"/> 
+            <motor ctrlrange="0 130"/>
         </default>
     </default>
 
@@ -65,46 +65,46 @@
             <body name="right_tilt_assembly" pos="0.0 0.3 0.0">
                 <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
                 <!-- 倾转关节：绕Y轴旋转，设置范围及阻尼 -->
-                <joint name="tilt_right_joint" type="hinge" axis="0 -1 0" range="-3 3" damping="0.1"/>
+                <joint name="tilt_right_joint" type="hinge" axis="0 -1 0" range="-3 3" damping="0.5"/>
                 <!-- 几何体：改用圆柱体表示视觉，保持碰撞圆柱 -->
                 <geom class="visual" type="cylinder" size="0.04 0.03"/>
-                <geom class="collision" type="cylinder" size="0.04 0.03"/>
+                <!-- <geom class="collision" type="cylinder" size="0.04 0.03"/> -->
                 <!-- 右下螺旋桨：保持网格表示 -->
                 <body name="right_bottom_prop" pos="0.0 0.0 -0.05">
                     <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
                     <joint name="prop_rb_joint" type="hinge" axis="0 0 1" damping="0.01"/>
                     <geom class="visual" type="mesh" mesh="framerb"/>
-                    <site name="thrust_rb" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                    <site name="motor_r_lower" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
                 </body>
                 <!-- 右上螺旋桨：保持网格表示 -->
                 <body name="right_top_prop" pos="0.0 0.0 0.05">
                     <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
                     <joint name="prop_rt_joint" type="hinge" axis="0 0 1" damping="0.01"/>
                     <geom class="visual" type="mesh" mesh="framert"/>
-                    <site name="thrust_rt" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                    <site name="motor_r_upper" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
                 </body>
             </body>
 
             <!-- 左侧倾转机构（结构对称） -->
             <body name="left_tilt_assembly"  pos="0.0 -0.3 0.0">
                 <inertial pos="0 0 0" mass="0.02" diaginertia="0.01 0.02 0.01"/>
-                <joint name="tilt_left_joint" type="hinge" axis="0 1 0" range="-3 3" damping="0.1"/>
+                <joint name="tilt_left_joint" type="hinge" axis="0 1 0" range="-3 3" damping="0.5"/>
                 <!-- 几何体：改用圆柱体表示视觉 -->
                 <geom class="visual" type="cylinder" size="0.04 0.03"/>
-                <geom class="collision" type="cylinder" size="0.04 0.03"/>
+                <!-- <geom class="collision" type="cylinder" size="0.04 0.03"/> -->
                 <!-- 左下螺旋桨：保持网格表示 -->
                 <body name="left_bottom_prop" pos="0.0 0.0 -0.05">
                     <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
                     <joint name="prop_lb_joint" type="hinge" axis="0 0 1" damping="0.01"/>
                     <geom class="visual" type="mesh" mesh="framelb"/>
-                    <site name="thrust_lb" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                    <site name="motor_l_lower" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
                 </body>
                 <!-- 左上螺旋桨：保持网格表示 -->
                 <body name="left_top_prop" pos="0.0 0.0 0.05">
                     <inertial pos="0 0 0" mass="0.01" diaginertia="0.001 0.001 0.002"/>
                     <joint name="prop_lt_joint" type="hinge" axis="0 0 1" damping="0.01"/>
                     <geom class="visual" type="mesh" mesh="framelt"/>
-                    <site name="thrust_lt" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                    <site name="motor_l_upper" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
                 </body>
             </body>
 
@@ -113,12 +113,12 @@
                 <inertial pos="0.0 0.0 0.0" mass="0.01" diaginertia="0.01 0.01 0.002"/>
                 <joint name="tail_joint" type="hinge" axis="0 0 1" damping="0.01"/>
                 <geom class="visual" type="mesh" mesh="frametail"/>
-                <site name="thrust_tail" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+                <site name="motor_rear_upper" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
             </body>
 
             <body name="rear_arm_base" pos="0.1 0 0">
                 <geom class="visual" type="cylinder" fromto="0 0 0 0.4 0 0" size="0.008"/>
-                <inertial pos="-0.2 0 0" mass="0.0" diaginertia="0.002 0.002 0.002"/>
+                <inertial pos="-0.2 0 0" mass="0.1" diaginertia="0.002 0.002 0.002"/>
             </body>
 
             <body name="left_arm_base" pos="0 0.1 0">
@@ -131,22 +131,22 @@
                 <inertial pos="0 -0.1 0" mass="0.19" diaginertia="0.002 0.002 0.002"/>
             </body>
 
-            <body name="Counterweight" pos="-0.5 0.0 0.02">
+            <!-- <body name="Counterweight" pos="-0.5 0.0 0.02">
                 <inertial pos="0.0 0.0 0.0" mass="0.01" diaginertia="0.01 0.01 0.01"/>
-            </body>
+            </body> -->
 
         </body>
     </worldbody>
 
     <!-- 执行器系统（保持不变） -->
     <actuator>
-        <position name="tilt_right" joint="tilt_right_joint" kp="15" kv="3"/> 
-        <position name="tilt_left"  joint="tilt_left_joint"  kp="15" kv="3"/>
-        <motor class="drone" name="thrust_rb" site="thrust_rb" gear="0 0 1 0 0 0.006"  forcerange="0 15"/>
-        <motor class="drone" name="thrust_rt" site="thrust_rt" gear="0 0 1 0 0 -0.006" forcerange="0 15"/>
-        <motor class="drone" name="thrust_lb" site="thrust_lb" gear="0 0 1 0 0 -0.006"  forcerange="0 15"/>
-        <motor class="drone" name="thrust_lt" site="thrust_lt" gear="0 0 1 0 0 0.006" forcerange="0 15"/>
-        <motor class="drone" name="thrust_tail" site="thrust_tail" gear="0 0 1 0 0 0.08" forcerange="-10 10" ctrlrange="-10 10"/>
+        <position name="tilt_right" joint="tilt_right_joint" kp="15" kv="3" ctrlrange="-3 3"/> 
+        <position name="tilt_left"  joint="tilt_left_joint"  kp="15" kv="3" ctrlrange="-3 3"/>
+        <motor class="drone" name="motor_r_lower" site="motor_r_lower" gear="0 0 1 0 0 0.006"  forcerange="0 15" ctrlrange="0 15"/>
+        <motor class="drone" name="motor_r_upper" site="motor_r_upper" gear="0 0 1 0 0 -0.006" forcerange="0 15" ctrlrange="0 15"/>
+        <motor class="drone" name="motor_l_lower" site="motor_l_lower" gear="0 0 1 0 0 -0.006" forcerange="0 15" ctrlrange="0 15"/>
+        <motor class="drone" name="motor_l_upper" site="motor_l_upper" gear="0 0 1 0 0 0.006"  forcerange="0 15" ctrlrange="0 15"/>
+        <motor class="drone" name="motor_rear_upper" site="motor_rear_upper" gear="0 0 1 0 0 0.08" forcerange="-5 5" ctrlrange="-5 5"/>
     </actuator>
 
     <!-- 传感器系统（保持不变） -->
@@ -156,11 +156,11 @@
         <framequat name="body_quat" objtype="site" objname="imu"/>
         <framepos name="body_pos" objtype="site" objname="imu"/>
         <framelinvel name="body_vel" objtype="site" objname="imu"/>
-        <force name="thrust_rb_frc" site="thrust_rb"/>
-        <force name="thrust_rt_frc" site="thrust_rt"/>
-        <force name="thrust_lb_frc" site="thrust_lb"/>
-        <force name="thrust_lt_frc" site="thrust_lt"/>
-        <force name="thrust_tail_frc" site="thrust_tail"/>
+        <force name="thrust_rb_frc" site="motor_r_lower"/>
+        <force name="thrust_rt_frc" site="motor_r_upper"/>
+        <force name="thrust_lb_frc" site="motor_l_lower"/>
+        <force name="thrust_lt_frc" site="motor_l_upper"/>
+        <force name="thrust_tail_frc" site="motor_rear_upper"/>
         <subtreeangmom name="body_ang_mom" body="base_link"/>
         <jointpos name="tilt_right_pos" joint="tilt_right_joint"/>
         <jointvel name="tilt_right_vel" joint="tilt_right_joint"/>

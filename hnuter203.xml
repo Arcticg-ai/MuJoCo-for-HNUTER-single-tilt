@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco>
+  <compiler autolimits="true" angle="radian" inertiafromgeom="false" assetdir="assets_hnu"/>
+
+  <!-- <option timestep="0.01" iterations="100" tolerance="1e-10" integrator="RK4"/> -->
+  <!-- 物理环境参数：时间步长、重力、空气密度、粘度 -->
+  <option timestep="0.01" gravity="0 0 -9.81" density="1.204" viscosity="1.8e-5"/>
+
+  <asset>
+      <!-- 纹理：天空盒渐变效果 -->
+      <texture type="skybox" builtin="gradient" width="512" height="512" rgb1="0.6 0.8 1" rgb2="0.2 0.3 0.6"/>
+      
+      <!-- 材质：定义视觉和碰撞的材质特性 -->
+      <material name="visualGeo" rgba="0.93 0.8 0.25 1"/> <!-- 视觉材质：橙色 -->
+      <material name="collisionGeo" rgba="0.3 0.3 0.8 0.5"/> <!-- 碰撞材质：蓝色半透明 -->
+      <material name="white" rgba="0.9 0.9 0.9 1"/>
+      <material name="orange" rgba="1.0 0.5 0.0 1"/>
+      <material name="blue" rgba="0.0 0.5 1.0 1"/>
+      <material name="dark_gray" rgba="0.3 0.3 0.3 1"/>
+      <material name="cyan" rgba="0.0 1.0 1.0 1"/>
+      <material name="black" rgba="0.1 0.1 0.1 1"/>
+      <material name="propeller_color1" rgba="0.7 0.9 1.0 0.8"/>
+      <material name="propeller_color2" rgba="1.0 0.7 0.7 0.8"/>
+
+      <!-- 网格：只保留螺旋桨部分的网格，其他部分改用基本几何体 -->
+      <mesh name="framerb" file="T-framerb.stl"/>
+      <mesh name="framert" file="T-framert.stl"/>
+      <mesh name="framelb" file="T-framelb.stl"/>
+      <mesh name="framelt" file="T-framelt.stl"/>
+      <mesh name="frametail" file="T-frametail.stl"/>
+  </asset>
+
+  <!-- 修正：将所有default定义合并到同一个顶级default块内 -->
+  <default>
+      <!-- 无人机类别的默认参数 -->
+      <default class="drone">
+      <!-- 视觉几何体默认参数：不参与碰撞 -->
+      <default class="visual">
+          <geom group="2" contype="0" conaffinity="0" material="visualGeo"/> 
+      </default>
+      <!-- 碰撞几何体默认参数：设置接触动力学 -->
+      <default class="collision">
+          <geom group="3" contype="1" conaffinity="1" material="collisionGeo"/>
+      </default>
+          <!-- 电机默认控制范围 -->
+          <site group="3"/> 
+          <motor ctrlrange="0 130"/>
+      </default>
+  </default>
+
+  <worldbody>    
+    <!-- 无人机主体 -->
+    <body name="base_link" pos="0 0 0.575">
+    <joint name="free_joint" type="free"/>
+    <!-- 无人机机身（立方体） -->
+    <geom class="visual" type="box" size="0.15 0.1 0.05"/>
+    <geom class="collision" type="box" size="0.15 0.1 0.05"/>
+    <inertial pos="0 0 0" mass="3.0" diaginertia="0.01 0.01 0.01"/>
+    <site name="imu" pos="0 0 0"/>
+
+      <!-- 机腹四条腿 -->
+      <body name="leg_front_right" pos="0.1 0.06 -0.05">
+        <geom name="leg_fr" type="cylinder" fromto="0 0 0 0 0 -0.1" size="0.005" material="black" class="visual"/>
+        <inertial pos="0 0 -0.05" mass="0.00" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="leg_front_left" pos="0.1 -0.06 -0.05">
+        <geom name="leg_fl" type="cylinder" fromto="0 0 0 0 0 -0.1" size="0.005" material="black" class="visual"/>
+        <inertial pos="0 0 -0.05" mass="0.00" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="leg_rear_right" pos="-0.1 0.06 -0.05">
+        <geom name="leg_rr" type="cylinder" fromto="0 0 0 0 0 -0.1" size="0.005" material="black" class="visual"/>
+        <inertial pos="0 0 -0.05" mass="0.00" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      <body name="leg_rear_left" pos="-0.1 -0.06 -0.05">
+        <geom name="leg_rl" type="cylinder" fromto="0 0 0 0 0 -0.1" size="0.005" material="black" class="visual"/>
+        <inertial pos="0 0 -0.05" mass="0.00" diaginertia="0.0001 0.0001 0.0001"/>
+      </body>
+      
+      <!-- 左机臂和螺旋桨（顺时针旋转 - 橙色） -->
+      <body name="right_arm_base" pos="0 0.1 0">
+        <!-- 机臂绕自身中心轴旋转关节（Yaw轴） -->
+        <joint name="arm_pitch_left" type="hinge" pos="0 0 0" axis="0 1 0" range="-3.1 3.1" damping="0.1"/>
+        
+        <!-- 机臂与机身连接的圆柱体 -->
+        <!-- <geom name="arm_connector_r" type="cylinder" fromto="0 0 0 0 0.2 0" size="0.008" material="dark_gray" class="collision"/> -->
+        <!-- 几何体：改用圆柱体表示视觉，保持碰撞圆柱 -->
+        <geom class="visual" type="cylinder" size="0.04 0.03"/>
+        <geom class="collision" type="cylinder" size="0.04 0.03"/>
+
+        <inertial pos="0 0.1 0" mass="0.3" diaginertia="0.002 0.002 0.002"/>
+        
+        <!-- 螺旋桨支撑柱（可倾转） -->
+        <body name="right_prop_support" pos="0 0.2 0">
+          <!-- 共轴双桨模块倾转关节（Roll轴） -->
+          <joint name="prop_tilt_left" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-3.1 3.1"/>
+          
+          <geom name="prop_support_r" type="cylinder" fromto="0 0 -0.05 0 0 0.05" size="0.01" material="dark_gray" class="visual"/>
+          <inertial pos="0 0 0" mass="0.1" diaginertia="0.001 0.001 0.001"/>
+          
+          <!-- 上螺旋桨 -->
+          <body name="right_prop_upper" pos="0 0 0.05">
+            <joint name="prop_r_upper" type="hinge" pos="0 0 0" axis="0 0 1" limited="false"/>
+            <geom name="propeller_r_upper" type="mesh" mesh="framelt" class="visual"/>
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0005 0.0005 0.0005"/>
+            <site name="motor_r_upper" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+          </body>
+          
+          <!-- 下螺旋桨 -->
+          <body name="right_prop_lower" pos="0 0 -0.05">
+            <joint name="prop_r_lower" type="hinge" pos="0 0 0" axis="0 0 1" limited="false"/>
+            <geom name="propeller_r_lower" type="mesh" mesh="framelb" class="visual"/>
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0005 0.0005 0.0005"/>
+            <site name="motor_r_lower" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+          </body>
+        </body>
+      </body>
+      
+      <!-- 右机臂和螺旋桨（逆时针旋转 - 蓝色） -->
+      <body name="left_arm_base" pos="0 -0.1 0">
+        <!-- 机臂绕自身中心轴旋转关节（Yaw轴） -->
+        <joint name="arm_pitch_right" type="hinge" pos="0 0 0" axis="0 1 0" limited="true" range="-3.1 3.1"/>
+        
+        <!-- 机臂与机身连接的圆柱体 -->
+        <geom name="arm_connector_l" type="cylinder" fromto="0 0 0 0 -0.2 0" size="0.008" material="dark_gray" class="collision"/>
+        <inertial pos="0 -0.1 0" mass="0.3" diaginertia="0.002 0.002 0.002"/>
+        
+        <!-- 螺旋桨支撑柱（可倾转） -->
+        <body name="left_prop_support" pos="0 -0.2 0">
+          <!-- 共轴双桨模块倾转关节（Roll轴） -->
+          <joint name="prop_tilt_right" type="hinge" pos="0 0 0" axis="1 0 0" limited="true" range="-3.1 3.1"/>
+          
+          <geom name="prop_support_l" type="cylinder" fromto="0 0 -0.05 0 0 0.05" size="0.01" material="dark_gray" class="visual"/>
+          <inertial pos="0 0 0" mass="0.1" diaginertia="0.001 0.001 0.001"/>
+          
+          <!-- 上螺旋桨 -->
+          <body name="left_prop_upper" pos="0 0 0.05">
+            <joint name="prop_l_upper" type="hinge" pos="0 0 0" axis="0 0 1" limited="false"/>
+            <geom name="propeller_l_upper" type="mesh" mesh="framert" class="visual"/>
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0005 0.0005 0.0005"/>
+            <site name="motor_l_upper" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+          </body>
+          
+          <!-- 下螺旋桨 -->
+          <body name="left_prop_lower" pos="0 0 -0.05">
+            <joint name="prop_l_lower" type="hinge" pos="0 0 0" axis="0 0 1" limited="false"/>
+            <geom name="propeller_l_lower" type="mesh" mesh="framerb" class="visual"/>
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0005 0.0005 0.0005"/>
+            <site name="motor_l_lower" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- 后机臂和螺旋桨（顺时针旋转 - 橙色） -->
+      <body name="rear_arm_base" pos="-0.1 0 0">
+        <geom name="arm_connector_rear" type="cylinder" fromto="0 0 0 -0.4 0 0" size="0.008" material="dark_gray" class="collision"/>
+        <inertial pos="-0.2 0 0" mass="0.0" diaginertia="0.002 0.002 0.002"/>
+        
+        <!-- 螺旋桨支撑柱（可倾转） -->
+        <body name="rear_prop_support" pos="-0.4 0 0">
+          <geom name="prop_support_rear" type="cylinder" fromto="0 0 -0.05 0 0 0.05" size="0.01" material="dark_gray" class="visual"/>
+          <inertial pos="0 0 0" mass="0.00" diaginertia="0.001 0.001 0.001"/>
+          
+          <!-- 上螺旋桨 -->
+          <body name="rear_prop_upper" pos="0 0 0.05">
+            <joint name="prop_rear_upper" type="hinge" pos="0 0 0" axis="0 0 1" limited="false"/>
+            <geom name="propeller_rear_upper" type="cylinder" size="0.12 0.01" euler="0 0 0" material="propeller_color1" class="visual"/>
+            <!-- 旋转方向指示器（橙色） -->
+            <site name="rotation_indicator_rear_upper" type="box" size="0.05 0.01 0.005" pos="0.08 0 0.01" rgba="1.0 0.5 0.0 0.8"/>
+            <inertial pos="0 0 0" mass="0.1" diaginertia="0.0005 0.0005 0.0005"/>
+            <site name="motor_rear_upper" pos="0.0 0.0 0.0" zaxis="0 0 1"/>
+          </body>
+        </body>
+      </body>
+    </body>
+    
+    <light name="light" pos="0 0 5" dir="0 0 -1" directional="true" castshadow="true"/>
+  </worldbody>
+  
+  <!-- 执行器定义 -->
+  <actuator>
+    <!-- 螺旋桨转速控制 -->
+    <motor name="motor_r_upper" site="motor_r_upper" gear="0 0 1 0 0 -0.006" forcerange="0 25" ctrlrange="0 25"/>
+    <motor name="motor_r_lower" site="motor_r_lower" gear="0 0 1 0 0 0.006" forcerange="0 25" ctrlrange="0 25"/>
+    <motor name="motor_l_upper" site="motor_l_upper" gear="0 0 1 0 0 0.006" forcerange="0 25" ctrlrange="0 25"/>
+    <motor name="motor_l_lower" site="motor_l_lower" gear="0 0 1 0 0 -0.006" forcerange="0 25" ctrlrange="0 25"/>
+    <motor name="motor_rear_upper" site="motor_rear_upper" gear="0 0 1 0 0 0" forcerange="-10 10" ctrlrange="-10 10"/>
+
+    <!-- 机臂偏航控制（位置伺服） -->
+    <position name="tilt_pitch_left" joint="arm_pitch_left" kp="15" kv="3"/>
+    <position name="tilt_pitch_right" joint="arm_pitch_right" kp="15" kv="3"/>
+    
+    <!-- 螺旋桨倾转控制（位置伺服） -->
+    <position name="tilt_roll_left" joint="prop_tilt_left" kp="15" kv="3"/>
+    <position name="tilt_roll_right" joint="prop_tilt_right" kp="15" kv="3"/>
+  </actuator>
+  
+  <sensor>
+    <!-- 位置和姿态传感器 -->
+    <framepos name="drone_pos" objtype="body" objname="base_link"/>
+    <framequat name="drone_quat" objtype="body" objname="base_link"/>
+    
+    <!-- 螺旋桨速度传感器 -->
+    <jointvel name="prop_r_upper_vel" joint="prop_r_upper"/>
+    <jointvel name="prop_r_lower_vel" joint="prop_r_lower"/>
+    <jointvel name="prop_l_upper_vel" joint="prop_l_upper"/>
+    <jointvel name="prop_l_lower_vel" joint="prop_l_lower"/>
+    <jointvel name="prop_rear_upper_vel" joint="prop_rear_upper"/>
+    
+    <!-- 倾转角度传感器 -->
+    <jointpos name="arm_pitch_left_pos" joint="arm_pitch_left"/>
+    <jointpos name="arm_pitch_right_pos" joint="arm_pitch_right"/>
+    <jointpos name="prop_tilt_left_pos" joint="prop_tilt_left"/>
+    <jointpos name="prop_tilt_right_pos" joint="prop_tilt_right"/>
+    
+    <!-- 执行器状态传感器 -->
+    <actuatorfrc name="motor_r_upper_torque" actuator="motor_r_upper"/>
+    <actuatorfrc name="motor_r_lower_torque" actuator="motor_r_lower"/>
+    <actuatorfrc name="motor_l_upper_torque" actuator="motor_l_upper"/>
+    <actuatorfrc name="motor_l_lower_torque" actuator="motor_l_lower"/>
+    <actuatorfrc name="motor_rear_upper_torque" actuator="motor_rear_upper"/>
+  </sensor>
+</mujoco>

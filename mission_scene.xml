@@ -5,7 +5,7 @@
 
   <!-- <include file="hnuter.xml"/> -->
   <include file="hnuter_mission.xml" euler="0 0 0"/>
-
+  <!-- <include file="hnuter203.xml" euler="0 0 0"/> -->
   <!-- <statistic center="0 -0.2 0.1" extent="1.0"/> -->
   <statistic center="0 0 1" extent="1.0"/>
 
@@ -31,9 +31,9 @@
     <light name="light1" pos="0 0 10" dir="0 0 -1" diffuse="1 1 1" specular="0.7 0.7 0.7" />
     <geom name="floor" type="plane" size="0 0 0.05" material="grid"/>
 
-    <!-- <body name="slope1" pos="5 0 0.25" euler="0 3.8 1.57"> 
+    <body name="slope1" pos="5 0 0.25" euler="0 3.8 1.57"> 
       <geom type="box" size="5 5 0.05" rgba="0.7 0.3 0.3 1" mass="10"/>
-    </body> -->
+    </body>
 
   </worldbody>
   

@@ -72,58 +72,69 @@ class HnuterController:
         
         # 创建日志文件
         self._create_log_file()
-              
+        
+        # 新增：存储目标旋转矩阵对应的欧拉角
+        self.target_euler_from_R = np.zeros(3)  # roll, pitch, yaw
+        # 新增：存储姿态误差和角速度误差（用于输出和日志）
+        self.attitude_error = np.zeros(3)  # 姿态误差 e_R
+        self.angular_velocity_error = np.zeros(3)  # 角速度误差 e_omega
+        
         print("倾转旋翼控制器初始化完成（含几何控制器）")
     
     def _create_log_file(self):
-        """创建日志文件并写入表头"""
+        """创建日志文件并写入表头（仅保留姿态、期望姿态、姿态误差、力矩、执行器状态）"""
         # 确保logs目录存在
         if not os.path.exists('logs'):
             os.makedirs('logs')
         
         # 创建带时间戳的文件名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        self.log_file = f'logs/drone_log_{timestamp}.csv'
+        self.log_file = f'logs/drone_attitude_log_{timestamp}.csv'
         
-        # 写入CSV表头
+        # 写入CSV表头（仅保留必要字段）
         with open(self.log_file, 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow([
-                'timestamp', 'pos_x', 'pos_y', 'pos_z', 
-                'target_x', 'target_y', 'target_z',
+                'timestamp',
+                # 实际姿态 (rad)
                 'roll', 'pitch', 'yaw',
-                'target_roll', 'target_pitch', 'target_yaw'
-                'vel_x', 'vel_y', 'vel_z',
-                'angular_vel_x', 'angular_vel_y', 'angular_vel_z',
-                'accel_x', 'accel_y', 'accel_z',
-                'f_world_x', 'f_world_y', 'f_world_z',
-                'f_body_x', 'f_body_y', 'f_body_z',
-                'tau_x', 'tau_y', 'tau_z',
-                'u1', 'u2', 'u3', 'u4', 'u5',
+                # 设定的期望姿态 (rad)
+                'target_roll', 'target_pitch', 'target_yaw',
+                # R_WB_d对应的期望姿态 (rad)
+                'target_roll_R', 'target_pitch_R', 'target_yaw_R',
+                # 姿态误差 (rad)
+                'attitude_error_roll', 'attitude_error_pitch', 'attitude_error_yaw',
+                # 角速度误差 (rad/s)
+                'angular_vel_error_roll', 'angular_vel_error_pitch', 'angular_vel_error_yaw',
+                # 控制力矩 (Nm)
+                'tau_roll', 'tau_pitch', 'tau_yaw',
+                # 执行器状态
                 'T12', 'T34', 'T5',
-                'alpha0', 'alpha1'
+                'alpha0', 'alpha1'  # 倾转角 (rad)
             ])
         
         print(f"已创建日志文件: {self.log_file}")
     
     def log_status(self, state: dict):
-        """记录状态到日志文件"""
+        """记录状态到日志文件（仅保留必要字段）"""
         timestamp = time.time()
         with open(self.log_file, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow([
                 timestamp,
-                state['position'][0], state['position'][1], state['position'][2],
-                self.target_position[0], self.target_position[1], self.target_position[2],
+                # 实际姿态
                 state['euler'][0], state['euler'][1], state['euler'][2],
-                self.target_attitude[0],self.target_attitude[1]/2, self.target_attitude[2],
-                state['velocity'][0], state['velocity'][1], state['velocity'][2],
-                state['angular_velocity'][0], state['angular_velocity'][1], state['angular_velocity'][2],
-                state['acceleration'][0], state['acceleration'][1], state['acceleration'][2],
-                self.f_c_world[0], self.f_c_world[1], self.f_c_world[2],
-                self.f_c_body[0], self.f_c_body[1], self.f_c_body[2],
+                # 设定的期望姿态
+                self.target_attitude[0], self.target_attitude[1]/2, self.target_attitude[2],
+                # R_WB_d对应的期望姿态
+                self.target_euler_from_R[0], self.target_euler_from_R[1], self.target_euler_from_R[2],
+                # 姿态误差
+                self.attitude_error[0], self.attitude_error[1], self.attitude_error[2],
+                # 角速度误差
+                self.angular_velocity_error[0], self.angular_velocity_error[1], self.angular_velocity_error[2],
+                # 控制力矩
                 self.tau_c[0], self.tau_c[1], self.tau_c[2],
-                self.u[0], self.u[1], self.u[2], self.u[3], self.u[4],
+                # 执行器状态
                 self.T12, self.T34, self.T5,
                 self.alpha0, self.alpha1
             ])
@@ -259,6 +270,62 @@ class HnuterController:
         # 组合旋转矩阵 (Z-Y-X顺序)
         return R_z.dot(R_y.dot(R_x))
 
+    def rotation_matrix_to_euler(self, R: np.ndarray) -> np.ndarray:
+        """
+        新增：旋转矩阵转欧拉角（Z-Y-X顺序：yaw-pitch-roll）
+        输入：3x3旋转矩阵
+        输出：欧拉角 [roll, pitch, yaw]（单位：弧度）
+        """
+        # 确保旋转矩阵是正交的（数值稳定性处理）
+        R = self._orthonormalize_rotation_matrix(R)
+        
+        # 提取旋转矩阵元素
+        R11, R12, R13 = R[0, :]
+        R21, R22, R23 = R[1, :]
+        R31, R32, R33 = R[2, :]
+        
+        # 计算俯仰角（y轴旋转）
+        pitch = math.asin(-R31)
+        
+        # 处理奇异情况（俯仰角接近±90度）
+        if abs(pitch) > math.pi/2 - 1e-6:
+            # 奇异情况：滚转角为0，偏航角由R12和R22决定
+            roll = 0.0
+            yaw = math.atan2(R12, R22)
+        else:
+            # 正常情况
+            roll = math.atan2(R32, R33)
+            yaw = math.atan2(R21, R11)
+        
+        # 确保角度在[-π, π]范围内
+        roll = self._normalize_angle(roll)
+        pitch = self._normalize_angle(pitch)
+        yaw = self._normalize_angle(yaw)
+        
+        return np.array([roll, pitch, yaw])
+    
+    def _orthonormalize_rotation_matrix(self, R: np.ndarray) -> np.ndarray:
+        """
+        辅助函数：正交化旋转矩阵（处理数值误差）
+        使用SVD分解确保旋转矩阵的正交性
+        """
+        U, _, Vt = np.linalg.svd(R)
+        # 确保旋转矩阵是右手系（行列式为1）
+        R_ortho = U @ Vt
+        if np.linalg.det(R_ortho) < 0:
+            Vt[-1, :] *= -1
+            R_ortho = U @ Vt
+        return R_ortho
+    
+    def _normalize_angle(self, angle: float) -> float:
+        """
+        辅助函数：将角度归一化到[-π, π]范围内
+        """
+        angle = angle % (2 * math.pi)
+        if angle > math.pi:
+            angle -= 2 * math.pi
+        return angle
+
     def _quat_to_rotation_matrix(self, quat: np.ndarray) -> np.ndarray:
         """四元数转旋转矩阵"""
         w, x, y, z = quat
@@ -308,6 +375,36 @@ class HnuterController:
         
         return np.array([roll, pitch, yaw])
     
+    def axis_angle_to_rotation(self, axis: np.ndarray, angle: float) -> np.ndarray:
+        """将轴角转换为旋转矩阵
+        参数:
+            axis: 旋转轴向量(3维)
+            angle: 旋转角度(弧度)
+        返回:
+            R: 3x3旋转矩阵
+        """
+        # 归一化旋转轴
+        axis_norm = np.linalg.norm(axis)
+        if axis_norm < 1e-6:
+            return np.eye(3)  # 零轴返回单位矩阵
+        
+        u = axis / axis_norm
+        ux, uy, uz = u
+        
+        # 计算旋转矩阵分量
+        cos_a = np.cos(angle)
+        sin_a = np.sin(angle)
+        one_minus_cos = 1.0 - cos_a
+        
+        # 构建旋转矩阵 (Rodrigues公式)
+        R = np.array([
+            [cos_a + ux*ux*one_minus_cos, ux*uy*one_minus_cos - uz*sin_a, ux*uz*one_minus_cos + uy*sin_a],
+            [uy*ux*one_minus_cos + uz*sin_a, cos_a + uy*uy*one_minus_cos, uy*uz*one_minus_cos - ux*sin_a],
+            [uz*ux*one_minus_cos - uy*sin_a, uz*uy*one_minus_cos + ux*sin_a, cos_a + uz*uz*one_minus_cos]
+        ])
+        
+        return R
+
     def vee_map(self, S: np.ndarray) -> np.ndarray:
         """反对称矩阵的vee映射"""
         return np.array([S[2, 1], S[0, 2], S[1, 0]])
@@ -348,7 +445,12 @@ class HnuterController:
             y_d /= y_norm
 
         # 构造目标旋转矩阵（无需SVD，直接返回正交矩阵）
-        return np.column_stack([x_ref, y_d, z_d])
+        R_WB_d = np.column_stack([x_ref, y_d, z_d])
+        
+        # 新增：将目标旋转矩阵转换为欧拉角并存储
+        self.target_euler_from_R = self.rotation_matrix_to_euler(R_WB_d)
+        
+        return R_WB_d
 
     def compute_attitude_errors(self, state: dict, R_WB_d: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """计算姿态误差(论文公式5)"""
@@ -356,7 +458,7 @@ class HnuterController:
         omega = state['angular_velocity']
         
         # 计算姿态误差矩阵
-        R_error = 0.5 * R_WB_d.T @ R_WB - R_WB.T @ R_WB_d
+        R_error =  R_WB_d.T @ R_WB - R_WB.T @ R_WB_d
         
         # vee映射（反对称矩阵→向量）
         e_R = np.array([R_error[2, 1], R_error[0, 2], R_error[1, 0]])
@@ -364,6 +466,10 @@ class HnuterController:
         # 角速度误差
         omega_ref = self.target_attitude_rate
         e_omega = omega - R_WB @ omega_ref
+        
+        # 存储误差用于输出和日志（仅新增这两行，不修改其他逻辑）
+        self.attitude_error = e_R
+        self.angular_velocity_error = e_omega
         
         return e_R, e_omega
 
@@ -507,174 +613,49 @@ class HnuterController:
         self.set_actuators(T12, T34, T5, alpha0, alpha1)
     
     def print_status(self):
-        """打印当前状态信息（包含控制信息）"""
+        """打印当前状态信息（仅输出姿态、期望姿态、姿态误差、力矩、执行器状态）"""
         state = self.get_state()
-        pos = state['position']
-        vel = state['velocity']
-        accel = state['acceleration']
         euler_deg = np.degrees(state['euler'])
         target_euler_deg = np.degrees(self.target_attitude)
-        print(f"位置: X={pos[0]:.2f}m, Y={pos[1]:.2f}m, Z={pos[2]:.2f}m")
-        print(f"目标位置: X={self.target_position[0]:.2f}m, Y={self.target_position[1]:.2f}m, Z={self.target_position[2]:.2f}m")
-        print(f"姿态: Roll={euler_deg[0]:.1f}°, Pitch={euler_deg[1]:.1f}°, Yaw={euler_deg[2]:.1f}°")  
-        print(f"姿态: tar_Roll={target_euler_deg[0]:.1f}°, tar_Pitch={target_euler_deg[1]/2:.1f}°, tar_Yaw={target_euler_deg[2]:.1f}°") 
-        print(f"速度: X={vel[0]:.2f}m/s, Y={vel[1]:.2f}m/s, Z={vel[2]:.2f}m/s")
-        print(f"加速度: X={accel[0]:.2f}m/s², Y={accel[1]:.2f}m/s², Z={accel[2]:.2f}m/s²")
-        print(f"控制力: X={self.f_c_body[0]:.2f}N, Y={self.f_c_body[1]:.2f}N, Z={self.f_c_body[2]:.2f}N")
-        print(f"控制力矩: X={self.tau_c[0]:.2f}Nm, Y={self.tau_c[1]:.2f}Nm, Z={self.tau_c[2]:.2f}Nm")
-        print(f"执行器状态: T12={self.T12:.2f}N, T34={self.T34:.2f}N, T5={self.T5:.2f}N, α0={math.degrees(self.alpha0):.1f}°, α1={math.degrees(self.alpha1):.1f}°")
-        print("--------------------------------------------------")
-
-def setup_plots():
-    """设置实时绘图"""
-    plt.ion()  # 开启交互模式
-    fig, axs = plt.subplots(4, 1, figsize=(12, 10))
-    
-    # 设置图间距
-    plt.subplots_adjust(hspace=0.5)
-    
-    # 位置图
-    pos_ax = axs[0]
-    pos_ax.set_title('Position (XYZ)')
-    pos_ax.set_ylabel('Meters')
-    pos_ax.grid(True)
-    pos_lines = {
-        'x': pos_ax.plot([], [], 'r-', label='X')[0],
-        'y': pos_ax.plot([], [], 'g-', label='Y')[0],
-        'z': pos_ax.plot([], [], 'b-', label='Z')[0],
-        'target': pos_ax.plot([], [], 'k--', label='Target Z')[0]
-    }
-    pos_ax.legend(loc='upper right')
-    
-    # 姿态图
-    att_ax = axs[1]
-    att_ax.set_title('Attitude (Roll, Pitch, Yaw)')
-    att_ax.set_ylabel('Degrees')
-    att_ax.grid(True)
-    att_lines = {
-        'roll': att_ax.plot([], [], 'r-', label='Roll')[0],
-        'pitch': att_ax.plot([], [], 'g-', label='Pitch')[0],
-        'yaw': att_ax.plot([], [], 'b-', label='Yaw')[0]
-    }
-    att_ax.legend(loc='upper right')
-    
-    # 推力图
-    thrust_ax = axs[2]
-    thrust_ax.set_title('Thrust')
-    thrust_ax.set_ylabel('Newtons')
-    thrust_ax.grid(True)
-    thrust_lines = {
-        'T12': thrust_ax.plot([], [], 'r-', label='T12')[0],
-        'T34': thrust_ax.plot([], [], 'g-', label='T34')[0],
-        'T5': thrust_ax.plot([], [], 'b-', label='T5')[0]
-    }
-    thrust_ax.legend(loc='upper right')
-    
-        # === 倾转角度图（替换原加速度图）===
-    tilt_ax = axs[3]
-    tilt_ax.set_title('Tilt Angles')
-    tilt_ax.set_ylabel('Degrees')
-    tilt_ax.grid(True)
-    tilt_lines = {
-        'alpha0': tilt_ax.plot([], [], 'r-', label='Right Tilt (α0)')[0],
-        'alpha1': tilt_ax.plot([], [], 'g-', label='Left Tilt (α1)')[0]
-    }
-    tilt_ax.legend(loc='upper right')
-    tilt_ax.axhline(y=85, color='r', linestyle='--', alpha=0.5)
-    tilt_ax.axhline(y=-85, color='r', linestyle='--', alpha=0.5)
-    tilt_ax.text(0.05, 0.9, 'SAFE LIMIT ±85°', transform=tilt_ax.transAxes, color='r')
-    # ================================
-
-    plt.tight_layout()
-    
-    # 存储数据
-    plot_data = {
-        'time': [],
-        'pos_x': [], 'pos_y': [], 'pos_z': [],
-        'target_z': [],
-        'roll': [], 'pitch': [], 'yaw': [],
-        'T12': [], 'T34': [], 'T5': [],
-        # 'accel_x': [], 'accel_y': [], 'accel_z': []
-        'alpha0': [], 'alpha1': []  # 添加倾转角存储
-    }
-    
-    return fig, axs, plot_data, {
-        'pos': pos_lines,
-        'att': att_lines,
-        'thrust': thrust_lines,
-        # 'accel': accel_lines
-        'tilt': tilt_lines  # 更新为倾转角度图
-    }
-
-def update_plot(fig, plot_data, plot_lines, time_val, state, controller):
-    """更新实时图表"""
-    # 更新数据
-    plot_data['time'].append(time_val)
-    
-    # 位置数据
-    plot_data['pos_x'].append(state['position'][0])
-    plot_data['pos_y'].append(state['position'][1])
-    plot_data['pos_z'].append(state['position'][2])
-    plot_data['target_z'].append(controller.target_position[2])
-    
-    # 姿态数据（转换为度数）
-    plot_data['roll'].append(np.degrees(state['euler'][0]))
-    plot_data['pitch'].append(np.degrees(state['euler'][1]))
-    plot_data['yaw'].append(np.degrees(state['euler'][2]))
-    
-    # 推力数据
-    plot_data['T12'].append(controller.T12)
-    plot_data['T34'].append(controller.T34)
-    plot_data['T5'].append(controller.T5)
-
-    # 倾转角度数据
-    plot_data['alpha0'].append(np.degrees(controller.alpha0))
-    plot_data['alpha1'].append(np.degrees(controller.alpha1))
-    
-    # 只保留最近100个数据点
-    max_points = 100
-    for key in plot_data:
-        plot_data[key] = plot_data[key][-max_points:]
-    
-    # 更新位置图
-    plot_lines['pos']['x'].set_data(plot_data['time'], plot_data['pos_x'])
-    plot_lines['pos']['y'].set_data(plot_data['time'], plot_data['pos_y'])
-    plot_lines['pos']['z'].set_data(plot_data['time'], plot_data['pos_z'])
-    plot_lines['pos']['target'].set_data(plot_data['time'], plot_data['target_z'])
-    plot_lines['pos']['target'].axes.set_xlim(min(plot_data['time']), max(plot_data['time']))
-    y_min = min(min(plot_data['pos_x']), min(plot_data['pos_y']), min(plot_data['pos_z']))
-    y_max = max(max(plot_data['pos_x']), max(plot_data['pos_y']), max(plot_data['pos_z']))
-    plot_lines['pos']['x'].axes.set_ylim(y_min - 0.1, y_max + 0.1)
-    
-    # 更新姿态图
-    plot_lines['att']['roll'].set_data(plot_data['time'], plot_data['roll'])
-    plot_lines['att']['pitch'].set_data(plot_data['time'], plot_data['pitch'])
-    plot_lines['att']['yaw'].set_data(plot_data['time'], plot_data['yaw'])
-    plot_lines['att']['roll'].axes.set_xlim(min(plot_data['time']), max(plot_data['time']))
-    y_min = min(min(plot_data['roll']), min(plot_data['pitch']), min(plot_data['yaw']))
-    y_max = max(max(plot_data['roll']), max(plot_data['pitch']), max(plot_data['yaw']))
-    plot_lines['att']['roll'].axes.set_ylim(y_min - 5, y_max + 5)
-    
-    # 更新推力图
-    plot_lines['thrust']['T12'].set_data(plot_data['time'], plot_data['T12'])
-    plot_lines['thrust']['T34'].set_data(plot_data['time'], plot_data['T34'])
-    plot_lines['thrust']['T5'].set_data(plot_data['time'], plot_data['T5'])
-    plot_lines['thrust']['T12'].axes.set_xlim(min(plot_data['time']), max(plot_data['time']))
-    y_min = min(min(plot_data['T12']), min(plot_data['T34']), min(plot_data['T5']))
-    y_max = max(max(plot_data['T12']), max(plot_data['T34']), max(plot_data['T5']))
-    plot_lines['thrust']['T12'].axes.set_ylim(y_min - 2, y_max + 2)
-    
-    # =====更新倾转角度图 =====
-    plot_lines['tilt']['alpha0'].set_data(plot_data['time'], plot_data['alpha0'])
-    plot_lines['tilt']['alpha1'].set_data(plot_data['time'], plot_data['alpha1'])
-    plot_lines['tilt']['alpha0'].axes.set_xlim(min(plot_data['time']), max(plot_data['time']))
-    y_min = min(min(plot_data['alpha0']), min(plot_data['alpha1']))
-    y_max = max(max(plot_data['alpha0']), max(plot_data['alpha1']))
-    plot_lines['tilt']['alpha0'].axes.set_ylim(min(y_min-5, -90), max(y_max+5, 90))
-
-    # 重绘图表
-    fig.canvas.draw()
-    fig.canvas.flush_events()
+        target_euler_R_deg = np.degrees(self.target_euler_from_R)
+        attitude_error_deg = np.degrees(self.attitude_error)
+        angular_vel_error_deg = np.degrees(self.angular_velocity_error)
+        
+        print("=" * 80)
+        print(f"当前时间: {time.strftime('%H:%M:%S', time.localtime())}")
+        print("\n【实际姿态】")
+        print(f"Roll: {euler_deg[0]:.1f}° ({state['euler'][0]:.3f} rad)")
+        print(f"Pitch: {euler_deg[1]:.1f}° ({state['euler'][1]:.3f} rad)")
+        print(f"Yaw: {euler_deg[2]:.1f}° ({state['euler'][2]:.3f} rad)")
+        
+        print("\n【期望姿态】")
+        print(f"设定姿态 - Roll: {target_euler_deg[0]:.1f}° ({self.target_attitude[0]:.3f} rad)")
+        print(f"设定姿态 - Pitch: {target_euler_deg[1]/2:.1f}° ({self.target_attitude[1]/2:.3f} rad)")
+        print(f"设定姿态 - Yaw: {target_euler_deg[2]:.1f}° ({self.target_attitude[2]:.3f} rad)")
+        print(f"R_WB_d姿态 - Roll: {target_euler_R_deg[0]:.1f}° ({self.target_euler_from_R[0]:.3f} rad)")
+        print(f"R_WB_d姿态 - Pitch: {target_euler_R_deg[1]:.1f}° ({self.target_euler_from_R[1]:.3f} rad)")
+        print(f"R_WB_d姿态 - Yaw: {target_euler_R_deg[2]:.1f}° ({self.target_euler_from_R[2]:.3f} rad)")
+        
+        print("\n【姿态误差】")
+        print(f"Roll误差: {attitude_error_deg[0]:.1f}° ({self.attitude_error[0]:.3f} rad)")
+        print(f"Pitch误差: {attitude_error_deg[1]:.1f}° ({self.attitude_error[1]:.3f} rad)")
+        print(f"Yaw误差: {attitude_error_deg[2]:.1f}° ({self.attitude_error[2]:.3f} rad)")
+        print(f"角速度误差 - Roll: {angular_vel_error_deg[0]:.1f}°/s ({self.angular_velocity_error[0]:.3f} rad/s)")
+        print(f"角速度误差 - Pitch: {angular_vel_error_deg[1]:.1f}°/s ({self.angular_velocity_error[1]:.3f} rad/s)")
+        print(f"角速度误差 - Yaw: {angular_vel_error_deg[2]:.1f}°/s ({self.angular_velocity_error[2]:.3f} rad/s)")
+        
+        print("\n【控制力矩】")
+        print(f"Roll力矩: {self.tau_c[0]:.3f} Nm")
+        print(f"Pitch力矩: {self.tau_c[1]:.3f} Nm")
+        print(f"Yaw力矩: {self.tau_c[2]:.3f} Nm")
+        
+        print("\n【执行器状态】")
+        print(f"前左组推力 (T12): {self.T12:.2f} N")
+        print(f"前右组推力 (T34): {self.T34:.2f} N")
+        print(f"尾部推力 (T5): {self.T5:.2f} N")
+        print(f"前右倾角 (α0): {math.degrees(self.alpha0):.1f}° ({self.alpha0:.3f} rad)")
+        print(f"前左倾角 (α1): {math.degrees(self.alpha1):.1f}° ({self.alpha1:.3f} rad)")
+        print("=" * 80)
 
 def mobius_trajectory(t, period=20.0, radius=2.0, height=2.5):
     """生成莫比乌斯环轨迹参数[7,8](@ref)"""
@@ -705,19 +686,11 @@ def mobius_trajectory(t, period=20.0, radius=2.0, height=2.5):
 def main():
     """主函数 - 启动仿真"""
     print("=== 倾转旋翼无人机状态监控系统 ===")
-    
-    # 设置图表
-    fig, axs, plot_data, plot_lines = setup_plots()
+    print("仅输出：姿态、期望姿态、姿态误差、力矩、执行器状态")
+    print("=" * 80)
 
     # 初始化控制器
     controller = HnuterController("mission_scene.xml")
-    
-    pitch = 0
-    yaw = 0
-    tag = 0
-    pos_x = 0
-    pos_y = 0
-    pos_z = 2.5
 
     # 启动 Viewer
     with viewer.launch_passive(controller.model, controller.data) as v:
@@ -727,39 +700,14 @@ def main():
         
         start_time = time.time()
         last_print_time = 0
-        last_plot_update = 0
 
         print_interval = 0.5  # 打印间隔 (秒)
-        plot_update_interval = 0.1  # 绘图更新间隔
         
         try:
             while v.is_running:
-                current_time = time.time() - start_time
-                # print(current_time)
-
-                # target_pos, target_vel, target_yaw , target_pitch = mobius_trajectory(current_time)
-                # 设置目标状态
-                # controller.set_target_position(*target_pos)
-                # controller.set_target_velocity(*target_vel)
-                # controller.set_target_attitude(0, target_pitch, target_yaw)
-                
-                target_position = [-3.0, 3.0, 2.25]
-                target_attitude = [-1.0472, 0.0, 0.0]  # roll, pitch, yaw
-                if current_time <= 2:
-                    controller.set_target_position(0.0, 0.0, 2.25)
-                    controller.set_target_attitude(0.0, 0.0, 0.0)
-                elif current_time > 2 and current_time <= 4:  # 改 & → and
-                    controller.set_target_position(0.0, 0.0, 2.25)
-                    controller.set_target_attitude(0.0, 1.35, 0.0)
-                elif current_time > 4 and current_time <= 10:  # 改 & → and
-                    controller.set_target_position(-3.0, 0.0, 2.25)
-                    controller.set_target_attitude(0.0, 1.2, 0.0)
-                else:
-                    controller.set_target_position(-3.0, 0.0, 2.25)
-                    controller.set_target_attitude(0.0, 1.2, 0.0)              
-
-                # controller.set_target_position(0.0, 0.0, 1.5)
-                # controller.set_target_attitude(0.0, 1.0, 0.0)
+                current_time = time.time() - start_time          
+                controller.set_target_position(0.0, 0.0, 1.5)
+                controller.set_target_attitude(0.0, 1.57, 0.0)
 
                 # 获取当前状态
                 state = controller.get_state()
@@ -783,24 +731,31 @@ def main():
                 if current_time - last_print_time > print_interval:
                     controller.print_status()
                     last_print_time = current_time
-                
-                # # 定期更新绘图
-                # if current_time - last_plot_update > plot_update_interval:
-                #     update_plot(fig, plot_data, plot_lines, current_time, state, controller)
-                #     last_plot_update = current_time
 
                 time.sleep(0.001)
 
         except KeyboardInterrupt:
-            print("\n仿真中断")
+            print("\n" + "=" * 80)
+            print("仿真中断")
         
+        print("=" * 80)
         print("仿真结束")
-        plt.savefig(controller.log_file.replace('.csv', '.png'))
-        plt.close()
-        print(f"图表保存至: {controller.log_file.replace('.csv', '.png')}")
+        
+        # 移除图表保存代码，避免报错
+        # plt.savefig(controller.log_file.replace('.csv', '.png'))
+        # plt.close()
+        # print(f"图表保存至: {controller.log_file.replace('.csv', '.png')}")
 
         final_state = controller.get_state()
-        print(f"最终位置: ({final_state['position'][0]:.2f}, {final_state['position'][1]:.2f}, {final_state['position'][2]:.2f})")
+        final_euler_deg = np.degrees(final_state['euler'])
+        final_target_euler_R_deg = np.degrees(controller.target_euler_from_R)
+        
+        print("\n【最终状态摘要】")
+        print(f"实际姿态 - Roll: {final_euler_deg[0]:.1f}°, Pitch: {final_euler_deg[1]:.1f}°, Yaw: {final_euler_deg[2]:.1f}°")
+        print(f"R_WB_d目标姿态 - Roll: {final_target_euler_R_deg[0]:.1f}°, Pitch: {final_target_euler_R_deg[1]:.1f}°, Yaw: {final_target_euler_R_deg[2]:.1f}°")
+        print(f"最终控制力矩 - Roll: {controller.tau_c[0]:.3f} Nm, Pitch: {controller.tau_c[1]:.3f} Nm, Yaw: {controller.tau_c[2]:.3f} Nm")
+        print(f"最终执行器状态 - T12: {controller.T12:.2f} N, T34: {controller.T34:.2f} N, T5: {controller.T5:.2f} N")
+        print(f"日志文件已保存至: {controller.log_file}")
 
 if __name__ == "__main__":
     main()
